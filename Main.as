@@ -10,32 +10,36 @@ package {
     [SWF(width="1024", height="768")]
     public class Main extends Sprite {
 
-        private var sun:Sprite = new Draggable();
+        private var sun:Sprite = new Sprite();
         private var plane:Sprite = new Sprite();
         private var polygons:Vector.<Polygon> = new Vector.<Polygon>();
         private var collisionTf:TextField = new TextField();
+        private var rays:Sprite = new Sprite();
 
         public function Main() {
-            sun.graphics.beginFill(0xff9900);
-            sun.graphics.drawCircle(0, 0, 20);
-            sun.graphics.endFill();
+            createSun();
             sun.y = sun.x = 50;
             addChild(sun);
+            graphics.lineStyle(1, 0xdddddd);
+            graphics.drawEllipse(0, 50, stage.stageWidth, stage.stageHeight - 100);
+            
+            createRays();
+
             initShadowPlane(sun);
             collisionTf.text = "collision";
             collisionTf.textColor = 0xff0000;
             addChild(collisionTf);
 
-            var vertices:Vector.<Point> = new <Point>[new Point(-50, -25), new Point(50, -25), new Point(50, 25), new Point(-50, 25)];
+            var vertices:Vector.<Point> = new <Point>[new Point(-100, -30), new Point(100, -30), new Point(100, 30), new Point(-100, 30)];
 
-            var polygon:Sprite = new Polygon(0x424242, vertices);
+            var polygon:Sprite = new Polygon(0x33ff55, vertices);
             polygons.push(polygon);
-            polygon.x = stage.stageWidth/2;
+            polygon.x = stage.stageWidth/2 + 100;
             polygon.y = stage.stageHeight/2 + 50;
             addChild(polygon);
-            vertices = new <Point>[new Point(0, -120), new Point(30, 25), new Point(-5, 25)];
+            vertices = new <Point>[new Point(-75, 100), new Point(0, -50), new Point(75, 100)];
             polygon = new Polygon(0x3299bb, vertices);
-            polygon.x = stage.stageWidth/2;
+            polygon.x = stage.stageWidth/2 - 100;
             polygon.y = stage.stageHeight/2 - 50;
             polygons.push(polygon);
             addChild(polygon);
@@ -44,10 +48,62 @@ package {
             sun.x = stage.stageWidth / 2;
         }
 
+        private function createRays():void {
+            rays.x = stage.stageWidth / 2;
+            rays.y = stage.stageHeight / 2;
+
+            for (var i:int = 0; i < 100; ++i) {
+                var ray:Ray = new Ray();
+                ray.x = (Math.random() - 0.5) * stage.stageWidth ;
+                ray.y = (Math.random() - 0.5) * stage.stageHeight;
+                rays.addChild(ray);
+
+                addChild(rays);
+            }
+        }
+
+        private function createSun():void {
+            sun.graphics.beginFill(0xffbb00);
+            sun.graphics.drawCircle(0, 0, 40);
+            sun.graphics.endFill();
+
+            sun.graphics.lineStyle(5, 0xffbb00);
+            for (var i:int = 0; i < 12; ++i) {
+                var angle:Number = i * 2 * Math.PI / 12;
+                var r1:Number = 40;
+                var r2:Number = 60;
+                sun.graphics.moveTo( r1 * Math.cos(angle), r1 * Math.sin(angle));
+                sun.graphics.lineTo( r2 * Math.cos(angle), r2 * Math.sin(angle));
+            }
+
+            sun.addEventListener(MouseEvent.MOUSE_DOWN, onSunDrag);
+            stage.addEventListener(MouseEvent.MOUSE_UP, onSunDragStop);
+
+        }
+
+        private function onSunDrag(e:MouseEvent):void {
+            stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+        }
+
+        private function onSunDragStop(e:MouseEvent):void {
+            stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
+        }
+
+        private function onMouseMove(e:MouseEvent):void {
+            var angle:Number = Math.atan2(e.stageY - stage.stageHeight / 2, e.stageX - stage.stageWidth / 2);
+            sun.x = stage.stageWidth / 2 + Math.cos(angle) * stage.stageWidth / 2;
+            sun.y = stage.stageHeight / 2 + Math.sin(angle) * (stage.stageHeight - 100) / 2;
+        }
+
+
         private function initShadowPlane(sun:Sprite):void {
-            plane.graphics.lineStyle(3, 0xcccccc);
-            plane.graphics.moveTo(-600, 0);
-            plane.graphics.lineTo(600, 0);
+            plane.graphics.beginFill(0xcccccc);
+            plane.graphics.moveTo(-800, 0);
+            plane.graphics.lineTo(800, 0);
+            plane.graphics.lineTo(800, -600);
+            plane.graphics.lineTo(-800, -600);
+            plane.graphics.lineTo(-800, 0);
+            plane.graphics.endFill();
             addChild(plane);
         }
 
@@ -67,9 +123,14 @@ package {
                         return a - b;
                     });
                 var shadow:Sprite = new Sprite();
+                shadow.graphics.beginFill(0);
                 shadow.graphics.lineStyle(1, 0x0);
                 shadow.graphics.moveTo(ks[0], 0);
                 shadow.graphics.lineTo(ks[ks.length - 1], 0);
+                shadow.graphics.lineTo(ks[ks.length - 1], -500);
+                shadow.graphics.lineTo(ks[0], -500);
+                shadow.graphics.lineTo(ks[0], 0);
+                shadow.graphics.endFill();
                 shadows.push(new Point(ks[0],ks[ks.length - 1])); 
                 plane.addChild(shadow);
             }
@@ -83,9 +144,11 @@ package {
         private function adjustShadowPlane(e:Event):void {
             var dx:Number = stage.stageWidth/2 - sun.x;
             var dy:Number = stage.stageHeight/2 - sun.y;
-            plane.rotation = (Math.atan2(dy, dx) + Math.PI /2) * 180 / Math.PI;
-            plane.x = stage.stageWidth/2 + dx;
-            plane.y = stage.stageHeight/2 + dy;
+            var angle:Number = (Math.atan2(dy, dx) + Math.PI /2) * 180 / Math.PI;
+            plane.rotation = angle;
+            rays.rotation = angle;
+            plane.x = stage.stageWidth/2 + dx / 2;
+            plane.y = stage.stageHeight/2 + dy / 2;
         }
     }
 }

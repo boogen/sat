@@ -6,6 +6,7 @@ package {
     public class Draggable extends Sprite {
         private var dx:Number;
         private var dy:Number;
+        protected var enabled:Boolean = true;
 
         public function Draggable() {
             super();
@@ -13,24 +14,26 @@ package {
         }
 
         private function onAddedToStage(e:Event):void {
-            addEventListener(MouseEvent.MOUSE_DOWN, onSunDrag);
-            stage.addEventListener(MouseEvent.MOUSE_UP, onSunDragStop);
+            addEventListener(MouseEvent.MOUSE_DOWN, onDrag);
+            stage.addEventListener(MouseEvent.MOUSE_UP, onDragStop);
         }
 
-        private function onSunDrag(e:MouseEvent):void {
+        private function onDrag(e:MouseEvent):void {
             dx = x - e.stageX;
             dy = y - e.stageY;
             stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
         }
 
-        private function onSunDragStop(e:MouseEvent):void {
+        private function onDragStop(e:MouseEvent):void {
             scaleX = scaleY = 1;
             stage.removeEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
         }
 
         private function onMouseMove(e:MouseEvent):void {
-            x = e.stageX + dx;
-            y = e.stageY + dy;
+            if (enabled) {
+                x = e.stageX + dx;
+                y = e.stageY + dy;
+            }
         }
     }
 }
