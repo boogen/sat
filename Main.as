@@ -15,6 +15,7 @@ package {
         private var polygons:Vector.<Polygon> = new Vector.<Polygon>();
         private var collisionTf:TextField = new TextField();
         private var rays:Sprite = new Sprite();
+        private var rayArray:Vector.<Ray> = new Vector.<Ray>();
 
         public function Main() {
             createSun();
@@ -32,19 +33,21 @@ package {
 
             var vertices:Vector.<Point> = new <Point>[new Point(-100, -30), new Point(100, -30), new Point(100, 30), new Point(-100, 30)];
 
-            var polygon:Sprite = new Polygon(0x33ff55, vertices);
+            //var polygon:Sprite = new Polygon(0x33ff55, vertices);
+            var polygon:Sprite = new Polygon(0x33ff55, generateVertices(4, 100));
             polygons.push(polygon);
             polygon.x = stage.stageWidth/2 + 100;
             polygon.y = stage.stageHeight/2 + 50;
             addChild(polygon);
-            vertices = new <Point>[new Point(-75, 100), new Point(0, -50), new Point(75, 100)];
-            polygon = new Polygon(0x3299bb, vertices);
+            //vertices = new <Point>[new Point(-75, 100), new Point(0, -50), new Point(75, 100)];
+            polygon = new Polygon(0x3299bb, generateVertices(6, 120));
             polygon.x = stage.stageWidth/2 - 100;
             polygon.y = stage.stageHeight/2 - 50;
             polygons.push(polygon);
             addChild(polygon);
             stage.addEventListener(Event.ENTER_FRAME, adjustShadowPlane);
             stage.addEventListener(Event.ENTER_FRAME, castShadows);
+            stage.addEventListener(Event.ENTER_FRAME, checkRays);
             sun.x = stage.stageWidth / 2;
         }
 
@@ -59,6 +62,8 @@ package {
                 rays.addChild(ray);
 
                 addChild(rays);
+
+                rayArray.push(ray);
             }
         }
 
@@ -107,6 +112,14 @@ package {
             addChild(plane);
         }
 
+        private function checkRays(e:Event):void {
+            for each (var ray:Ray in rayArray) {
+                for each (var polygon:Polygon in polygons) {
+                    ray.checkCollision(polygon);
+                }
+            }
+        }
+
         private function castShadows(e:Event):void {
             var cos:Number = Math.cos(plane.rotation * Math.PI / 180);
             var sin:Number = Math.sin(plane.rotation * Math.PI / 180);
@@ -123,8 +136,8 @@ package {
                         return a - b;
                     });
                 var shadow:Sprite = new Sprite();
-                shadow.graphics.beginFill(0);
-                shadow.graphics.lineStyle(1, 0x0);
+                shadow.graphics.beginFill(0x333333, 0.5);
+                shadow.graphics.lineStyle(0, 0x0, 0);
                 shadow.graphics.moveTo(ks[0], 0);
                 shadow.graphics.lineTo(ks[ks.length - 1], 0);
                 shadow.graphics.lineTo(ks[ks.length - 1], -500);
@@ -149,6 +162,25 @@ package {
             rays.rotation = angle;
             plane.x = stage.stageWidth/2 + dx / 2;
             plane.y = stage.stageHeight/2 + dy / 2;
+        }
+
+
+        private function generateVertices(n:int, radius:Number):Vector.<Point> {
+            var angle:Number = 2 * Math.PI / n;
+
+            var result:Vector.<Point> = new Vector.<Point>();
+
+            for (var i:int = 0; i < n; ++i) {
+                var x:Number = Math.cos(i * angle) * radius;
+                var y:Number = Math.sin(i * angle) * radius;
+                
+                var p:Point = new Point();
+                p.x = x;
+                p.y = y;
+                result.push(p);
+            }
+
+            return result;
         }
     }
 }

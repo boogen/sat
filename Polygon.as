@@ -9,9 +9,17 @@ package {
         private var mx:Number = 0;
         private var my:Number = 0;
         private var angle:Number = 0;
+        public var color:int;
+        private var prevAngle:Number = 0;
 
-        public function Polygon(color:int, vertices:Vector.<Point>) {
-            graphics.beginFill(color);
+        public function Polygon(color:int, vertices:Vector.<Point>, fill:Boolean = true) {
+            this.color = color;
+            if (fill) {
+                graphics.beginFill(color);
+            }
+            else {
+                graphics.lineStyle(1, color);
+            }
             graphics.moveTo(vertices[0].x, vertices[0].y);
             for (var i:int = 1; i < vertices.length; i++) {
                 graphics.lineTo(vertices[i].x, vertices[i].y);
@@ -61,8 +69,8 @@ package {
             dot.graphics.beginFill(0xff0000);
             dot.graphics.drawCircle(0, 0, 5);
             dot.graphics.endFill();
-            dot.x = maxX - 20;
-            dot.y = minY + 20;
+            dot.x = maxX;
+            dot.y = 0 ;
             addChild(dot);
             dot.visible = false;
 
@@ -80,6 +88,10 @@ package {
             enabled = false;
             stage.addEventListener(MouseEvent.MOUSE_MOVE, onMouseMove);
             removeEventListener(MouseEvent.MOUSE_OUT, onMouseLeave);
+
+
+            prevAngle = angle;
+
         }
 
         private function onDragStop(e:MouseEvent):void {
@@ -89,10 +101,11 @@ package {
         }
 
         private function onMouseMove(e:MouseEvent):void {
-            var dx:Number = e.stageX - (x + mx);
-            var dy:Number = e.stageY - (y + my);
-            angle = Math.atan2(dy, dx);
+            var dx:Number = e.stageX - this.x - parent.x;
+            var dy:Number = e.stageY - this.y - parent.y;
+            angle += Math.atan2(dy, dx) - prevAngle;
             this.rotation = angle * 180 / Math.PI;
+            prevAngle = angle;
             
         }
 
